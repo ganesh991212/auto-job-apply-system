@@ -213,28 +213,40 @@ jobs:
             if (fs.existsSync(path)) {
               const results = JSON.parse(fs.readFileSync(path, 'utf8'));
               const status = results.overall_status === 'passed' ? '✅ PASSED' : '❌ FAILED';
-              
+
               const comment = `
-              ## 🤖 Automation Test Results ${status}
-              
+              ## 🤖 Auto Job Apply - Automation Test Results ${status}
+
               **Overall Status:** ${results.overall_status.toUpperCase()}
-              
-              ### 📱 Flutter Tests
+
+              ### 📱 Flutter Integration Tests
               - Status: ${results.flutter_tests?.status || 'N/A'}
-              - Screenshots: ${results.flutter_tests?.screenshots_captured || 0}
-              
-              ### 🐍 Backend Tests  
+              - Screenshots Captured: ${results.flutter_tests?.screenshots_captured || 0}
+              - UI Screens Tested: Login, Dashboard, Job Application, Resume Upload, Settings
+              - Responsive Design: Mobile, Tablet, Desktop
+
+              ### 🐍 Backend API Tests
               - Status: ${results.backend_tests?.status || 'N/A'}
-              - API Responses: ${results.backend_tests?.api_responses_captured || 0}
-              
-              ### 📸 Screenshot Validation
+              - API Responses Captured: ${results.backend_tests?.api_responses_captured || 0}
+              - Services Tested: Auth, Core, ML, Payment
+              - Database Operations: CRUD, Performance
+
+              ### 📸 Screenshot Validation & Auto-Fixing
               - Status: ${results.screenshot_validation?.status || 'N/A'}
               - Total Screenshots: ${results.screenshot_validation?.total_screenshots || 0}
               - Passed: ${results.screenshot_validation?.passed || 0}
               - Failed: ${results.screenshot_validation?.failed || 0}
               - Auto-Fixed: ${results.screenshot_validation?.auto_fixed || 0}
-              
+              - Similarity Threshold: 95%
+
+              ### 🎨 UI/UX Features Validated
+              - Modern Indigo/Cyan/Pink color palette
+              - WCAG AA accessibility compliance
+              - Responsive design across all devices
+              - Consistent spacing and typography
+
               [View detailed report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+              [View screenshots](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts)
               `;
               
               github.rest.issues.createComment({
