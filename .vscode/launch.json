@@ -1,0 +1,35 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Full Automation",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/automation/run_automation.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Run Flutter Tests Only",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/automation/run_automation.py",
+      "args": [
+        "--flutter-only"
+      ],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Run Backend Tests Only",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/automation/run_automation.py",
+      "args": [
+        "--backend-only"
+      ],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}

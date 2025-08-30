@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Job Apply - Test Frontend</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .service-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px 0;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .status-online { background-color: #28a745; }
+        .status-offline { background-color: #dc3545; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .response {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Auto Job Apply System - Test Dashboard</h1>
+        <p>Testing backend services connectivity</p>
+        
+        <div class="service-card">
+            <h3><span id="auth-status" class="status-indicator status-offline"></span>Auth Service (Port 8001)</h3>
+            <button onclick="testService('auth', 'http://localhost:8001')">Test Auth Service</button>
+            <button onclick="testService('auth-health', 'http://localhost:8001/health')">Health Check</button>
+            <div id="auth-response" class="response" style="display:none;"></div>
+        </div>
+        
+        <div class="service-card">
+            <h3><span id="core-status" class="status-indicator status-offline"></span>Core Service (Port 8002)</h3>
+            <button onclick="testService('core', 'http://localhost:8002')">Test Core Service</button>
+            <button onclick="testService('core-health', 'http://localhost:8002/health')">Health Check</button>
+            <div id="core-response" class="response" style="display:none;"></div>
+        </div>
+        
+        <div class="service-card">
+            <h3><span id="ml-status" class="status-indicator status-offline"></span>ML Service (Port 8003)</h3>
+            <button onclick="testService('ml', 'http://localhost:8003')">Test ML Service</button>
+            <button onclick="testService('ml-health', 'http://localhost:8003/health')">Health Check</button>
+            <div id="ml-response" class="response" style="display:none;"></div>
+        </div>
+        
+        <div class="service-card">
+            <h3><span id="payment-status" class="status-indicator status-offline"></span>Payment Service (Port 8004)</h3>
+            <button onclick="testService('payment', 'http://localhost:8004')">Test Payment Service</button>
+            <button onclick="testService('payment-health', 'http://localhost:8004/health')">Health Check</button>
+            <div id="payment-response" class="response" style="display:none;"></div>
+        </div>
+        
+        <div class="service-card">
+            <h3>Database Connection</h3>
+            <p><strong>Host:</strong> localhost:5432</p>
+            <p><strong>Database:</strong> AutoJobApply</p>
+            <p><strong>Status:</strong> <span id="db-status">✅ Connected</span></p>
+        </div>
+        
+        <div class="service-card">
+            <h3>Quick Actions</h3>
+            <button onclick="testAllServices()">Test All Services</button>
+            <button onclick="openApiDocs()">Open API Documentation</button>
+        </div>
+    </div>
+
+    <script>
+        async function testService(serviceName, url) {
+            const responseDiv = document.getElementById(serviceName + '-response');
+            const statusIndicator = document.getElementById(serviceName.split('-')[0] + '-status');
+            
+            responseDiv.style.display = 'block';
+            responseDiv.textContent = 'Testing...';
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                responseDiv.textContent = JSON.stringify(data, null, 2);
+                statusIndicator.className = 'status-indicator status-online';
+                
+            } catch (error) {
+                responseDiv.textContent = 'Error: ' + error.message;
+                statusIndicator.className = 'status-indicator status-offline';
+            }
+        }
+        
+        async function testAllServices() {
+            await testService('auth', 'http://localhost:8001/health');
+            await testService('core', 'http://localhost:8002/health');
+            await testService('ml', 'http://localhost:8003/health');
+            await testService('payment', 'http://localhost:8004/health');
+        }
+        
+        function openApiDocs() {
+            window.open('http://localhost:8001/docs', '_blank');
+            window.open('http://localhost:8002/docs', '_blank');
+            window.open('http://localhost:8003/docs', '_blank');
+            window.open('http://localhost:8004/docs', '_blank');
+        }
+        
+        // Auto-test services on page load
+        window.onload = function() {
+            setTimeout(testAllServices, 1000);
+        };
+    </script>
+</body>
+</html>

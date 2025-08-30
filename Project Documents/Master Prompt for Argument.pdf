@@ -1,0 +1,116 @@
+Project Name: Auto Job Apply System
+
+Tech Stack:
+
+Frontend: Flutter Web
+
+Backend: Python FastAPI
+
+Database: PostgreSQL + Redis (for caching)
+
+Security: OAuth2.0 (Google, Microsoft, Apple), Email+OTP, AES-256 for credentials, bcrypt for passwords
+
+ML: spaCy / BERT for Resume Parsing, Cosine Similarity for Job Match, LLM-based Resume Enhancement
+
+Deployment: Azure / AWS
+
+Payment Gateway: Stripe / Razorpay / PayPal
+
+Instructions for Argument AI:
+You are the lead AI developer for building the Auto Job Apply SaaS Platform. Follow the attached SRS, PRD, and Prompts documents as project requirements.
+
+Step 1: Setup Project Structure
+
+Create a multi-service architecture:
+
+/frontend → Flutter Web project
+
+/backend/auth → FastAPI service for authentication
+
+/backend/core → FastAPI service for job apply logic
+
+/backend/ml → ML microservice (resume parsing & rating)
+
+/backend/payment → Payment service integration
+
+/db → PostgreSQL schema + migrations
+
+Setup Docker Compose for local dev with all services (frontend, backend, db).
+
+Step 2: Implement Authentication
+
+Build Login Page with OAuth2 (Google, Microsoft, Apple) + Email+OTP.
+
+Use JWT sessions after login.
+
+Store OAuth tokens securely in DB.
+
+Step 3: Candidate Profile Setup
+
+Create UI form to capture: First Name, Last Name, Email, Phone, Current LPA, Expected LPA, Skills, Resume Upload.
+
+Dropdown for job platforms (LinkedIn, Naukri).
+
+Add/Remove logic → if a platform already added, hide it.
+
+Store credentials encrypted (AES-256).
+
+Step 4: Auto Job Apply Service
+
+Backend service to auto-apply jobs via LinkedIn/Naukri API (mock initially).
+
+Store logs → Company, Job Title, Description, Date.
+
+Daily limit: 5 applications per user (except admin).
+
+Step 5: Resume Matching & Enhancement
+
+ML microservice with endpoint /resume/match.
+
+Compare job description vs resume → return score + missing keywords.
+
+Generate enhancement suggestions using LLM.
+
+Step 6: Dashboard & Job History
+
+Candidate Dashboard → Top 5 job matches + rating.
+
+Job History → List of applied jobs (filters: date, company).
+
+Step 7: Payment Integration
+
+Implement subscription plans (monthly).
+
+Support Stripe, Razorpay, PayPal.
+
+Store billing history in DB.
+
+Step 8: Super Admin Features
+
+Admin Dashboard (stats, total users, total jobs applied).
+
+Add/remove job platforms.
+
+Unlimited job apply rights.
+
+Manage users & subscriptions.
+
+Step 9: Security
+
+Encrypt credentials with AES-256 before saving.
+
+Use bcrypt for password hashing.
+
+Implement audit logging for login attempts.
+
+Step 10: Deliverables
+
+Working SaaS with multi-tenant support.
+
+Clean UI (Flutter Web).
+
+Fully functional backend with modular microservices.
+
+Secure credential handling.
+
+Deployed on Azure/AWS with CI/CD.

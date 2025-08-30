@@ -1,0 +1,113 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    container_name: auto_job_apply_db
+    environment:
+      POSTGRES_DB: auto_job_apply
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d
+    networks:
+      - auto_job_network
+
+  # Authentication Service
+  auth-service:
+    build:
+      context: ./backend/auth
+      dockerfile: Dockerfile
+    container_name: auth_service
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres123@postgres:5432/auto_job_apply
+      JWT_SECRET_KEY: your-super-secret-jwt-key-change-in-production
+      ENCRYPTION_KEY: your-32-byte-encryption-key-here
+    ports:
+      - "8001:8000"
+    depends_on:
+      - postgres
+    networks:
+      - auto_job_network
+
+  # Core Job Application Service
+  core-service:
+    build:
+      context: ./backend/core
+      dockerfile: Dockerfile
+    container_name: core_service
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres123@postgres:5432/auto_job_apply
+      AUTH_SERVICE_URL: http://auth-service:8000
+    ports:
+      - "8002:8000"
+    depends_on:
+      - postgres
+      - auth-service
+    networks:
+      - auto_job_network
+
+  # ML Resume Parsing Service
+  ml-service:
+    build:
+      context: ./backend/ml
+      dockerfile: Dockerfile
+    container_name: ml_service
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres123@postgres:5432/auto_job_apply
+    ports:
+      - "8003:8000"
+    depends_on:
+      - postgres
+    networks:
+      - auto_job_network
+
+  # Payment Service
+  payment-service:
+    build:
+      context: ./backend/payment
+      dockerfile: Dockerfile
+    container_name: payment_service
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres123@postgres:5432/auto_job_apply
+      STRIPE_SECRET_KEY: sk_test_your_stripe_secret_key
+      RAZORPAY_KEY_ID: your_razorpay_key_id
+      RAZORPAY_KEY_SECRET: your_razorpay_key_secret
+    ports:
+      - "8004:8000"
+    depends_on:
+      - postgres
+    networks:
+      - auto_job_network
+
+  # Flutter Web Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend_web
+    environment:
+      AUTH_SERVICE_URL: http://localhost:8001
+      CORE_SERVICE_URL: http://localhost:8002
+      ML_SERVICE_URL: http://localhost:8003
+      PAYMENT_SERVICE_URL: http://localhost:8004
+    ports:
+      - "3000:80"
+    depends_on:
+      - auth-service
+      - core-service
+      - ml-service
+      - payment-service
+    networks:
+      - auto_job_network
+
+volumes:
+  postgres_data:
+
+networks:
+  auto_job_network:
+    driver: bridge

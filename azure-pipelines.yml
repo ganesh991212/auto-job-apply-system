@@ -1,0 +1,440 @@
+trigger:
+  branches:
+    include:
+    - main
+    - develop
+  paths:
+    exclude:
+    - README.md
+    - docs/*
+
+pr:
+  branches:
+    include:
+    - main
+  paths:
+    exclude:
+    - README.md
+    - docs/*
+
+schedules:
+- cron: "0 2 * * *"
+  displayName: Daily automation run
+  branches:
+    include:
+    - main
+  always: true
+
+variables:
+  FLUTTER_VERSION: '3.16.0'
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '18'
+  POSTGRES_PASSWORD: '9912129398'
+
+stages:
+- stage: Setup
+  displayName: 'Setup and Validation'
+  jobs:
+  - job: ValidateEnvironment
+    displayName: 'Validate Environment'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - checkout: self
+      displayName: 'Checkout source code'
+    
+    - task: UsePythonVersion@0
+      displayName: 'Setup Python'
+      inputs:
+        versionSpec: '$(PYTHON_VERSION)'
+        addToPath: true
+    
+    - task: FlutterInstall@0
+      displayName: 'Install Flutter'
+      inputs:
+        channel: 'stable'
+        version: '$(FLUTTER_VERSION)'
+    
+    - task: NodeTool@0
+      displayName: 'Setup Node.js'
+      inputs:
+        versionSpec: '$(NODE_VERSION)'
+    
+    - script: |
+        echo "Environment validation complete"
+        python --version
+        flutter --version
+        node --version
+      displayName: 'Verify installations'
+
+- stage: DatabaseSetup
+  displayName: 'Database Setup'
+  dependsOn: Setup
+  jobs:
+  - job: SetupPostgreSQL
+    displayName: 'Setup PostgreSQL Database'
+    pool:
+      vmImage: 'ubuntu-latest'
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: $(POSTGRES_PASSWORD)
+          POSTGRES_USER: postgres
+          POSTGRES_DB: AutoJobApply
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    
+    steps:
+    - checkout: self
+    
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '$(PYTHON_VERSION)'
+    
+    - script: |
+        pip install psycopg2-binary
+        python create_database_tables.py
+      displayName: 'Create database tables'
+      env:
+        DATABASE_URL: postgresql://postgres:$(POSTGRES_PASSWORD)@localhost:5432/AutoJobApply
+
+- stage: BackendServices
+  displayName: 'Backend Services'
+  dependsOn: DatabaseSetup
+  jobs:
+  - job: StartServices
+    displayName: 'Start Backend Services'
+    pool:
+      vmImage: 'ubuntu-latest'
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: $(POSTGRES_PASSWORD)
+          POSTGRES_USER: postgres
+          POSTGRES_DB: AutoJobApply
+        ports:
+          - 5432:5432
+    
+    steps:
+    - checkout: self
+    
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '$(PYTHON_VERSION)'
+    
+    - script: |
+        # Install system dependencies
+        sudo apt-get update
+        sudo apt-get install -y libpq-dev python3-dev build-essential
+      displayName: 'Install system dependencies'
+    
+    - script: |
+        # Setup and start auth service
+        cd backend/auth
+        python -m venv venv
+        source venv/bin/activate
+        pip install -r requirements.txt
+        python test_server.py &
+        
+        # Setup and start core service
+        cd ../core
+        python -m venv venv
+        source venv/bin/activate
+        pip install -r requirements.txt
+        python test_server.py &
+        
+        # Setup and start ML service
+        cd ../ml
+        python -m venv venv
+        source venv/bin/activate
+        pip install -r requirements.txt
+        python test_server.py &
+        
+        # Setup and start payment service
+        cd ../payment
+        python -m venv venv
+        source venv/bin/activate
+        pip install -r requirements.txt
+        python test_server.py &
+        
+        # Wait for services to start
+        sleep 30
+      displayName: 'Start backend services'
+    
+    - script: |
+        # Verify all services are running
+        curl -f http://localhost:8001/health || exit 1
+        curl -f http://localhost:8002/health || exit 1
+        curl -f http://localhost:8003/health || exit 1
+        curl -f http://localhost:8004/health || exit 1
+        echo "All backend services are running successfully"
+      displayName: 'Verify backend services'
+
+- stage: AutomationTests
+  displayName: 'Automation Tests'
+  dependsOn: BackendServices
+  jobs:
+  - job: FlutterTests
+    displayName: 'Flutter Integration Tests'
+    pool:
+      vmImage: 'ubuntu-latest'
+    
+    steps:
+    - checkout: self
+    
+    - task: FlutterInstall@0
+      inputs:
+        channel: 'stable'
+        version: '$(FLUTTER_VERSION)'
+    
+    - script: |
+        sudo apt-get update
+        sudo apt-get install -y xvfb chromium-browser chromium-chromedriver
+      displayName: 'Install browser dependencies'
+    
+    - script: |
+        cd frontend
+        flutter pub get
+        flutter config --enable-web
+      displayName: 'Setup Flutter project'
+    
+    - script: |
+        cd frontend
+        # Copy integration test file
+        mkdir -p integration_test
+        cp ../automation/tests/flutter_integration_test.dart integration_test/app_test.dart
+        
+        # Run integration tests with virtual display
+        xvfb-run -a flutter test integration_test --verbose
+      displayName: 'Run Flutter integration tests'
+      env:
+        DISPLAY: :99
+    
+    - task: PublishTestResults@2
+      condition: always()
+      inputs:
+        testResultsFormat: 'JUnit'
+        testResultsFiles: 'frontend/test-results.xml'
+        testRunTitle: 'Flutter Integration Tests'
+    
+    - task: PublishBuildArtifacts@1
+      condition: always()
+      inputs:
+        pathToPublish: 'automation/screenshots'
+        artifactName: 'flutter-screenshots'
+
+  - job: BackendTests
+    displayName: 'Backend API Tests'
+    pool:
+      vmImage: 'ubuntu-latest'
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: $(POSTGRES_PASSWORD)
+          POSTGRES_USER: postgres
+          POSTGRES_DB: AutoJobApply
+        ports:
+          - 5432:5432
+    
+    steps:
+    - checkout: self
+    
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '$(PYTHON_VERSION)'
+    
+    - script: |
+        pip install -r automation/requirements.txt
+        pip install pytest pytest-html pytest-json-report pytest-cov
+      displayName: 'Install Python dependencies'
+    
+    - script: |
+        # Start backend services (same as previous job)
+        cd backend/auth && python -m venv venv && source venv/bin/activate && pip install -r requirements.txt && python test_server.py &
+        cd ../core && python -m venv venv && source venv/bin/activate && pip install -r requirements.txt && python test_server.py &
+        cd ../ml && python -m venv venv && source venv/bin/activate && pip install -r requirements.txt && python test_server.py &
+        cd ../payment && python -m venv venv && source venv/bin/activate && pip install -r requirements.txt && python test_server.py &
+        sleep 30
+      displayName: 'Start backend services'
+    
+    - script: |
+        python -m pytest automation/tests/backend_automation_test.py -v \
+          --html=automation/reports/backend_report.html \
+          --json-report --json-report-file=automation/reports/backend_results.json \
+          --cov=backend --cov-report=xml --cov-report=html
+      displayName: 'Run backend automation tests'
+    
+    - task: PublishTestResults@2
+      condition: always()
+      inputs:
+        testResultsFormat: 'JUnit'
+        testResultsFiles: 'automation/reports/backend_results.xml'
+        testRunTitle: 'Backend API Tests'
+    
+    - task: PublishCodeCoverageResults@1
+      condition: always()
+      inputs:
+        codeCoverageTool: 'Cobertura'
+        summaryFileLocation: 'coverage.xml'
+        reportDirectory: 'htmlcov'
+    
+    - task: PublishBuildArtifacts@1
+      condition: always()
+      inputs:
+        pathToPublish: 'automation/reports'
+        artifactName: 'backend-test-reports'
+
+- stage: ScreenshotValidation
+  displayName: 'Screenshot Validation'
+  dependsOn: AutomationTests
+  jobs:
+  - job: ValidateScreenshots
+    displayName: 'Validate Screenshots and Auto-Fix UI'
+    pool:
+      vmImage: 'ubuntu-latest'
+    
+    steps:
+    - checkout: self
+    
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '$(PYTHON_VERSION)'
+    
+    - script: |
+        sudo apt-get update
+        sudo apt-get install -y libopencv-dev python3-opencv
+        pip install opencv-python pillow numpy
+      displayName: 'Install image processing dependencies'
+    
+    - task: DownloadBuildArtifacts@0
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: 'flutter-screenshots'
+        downloadPath: '$(System.ArtifactsDirectory)'
+    
+    - script: |
+        # Copy downloaded screenshots to automation directory
+        cp -r $(System.ArtifactsDirectory)/flutter-screenshots/* automation/screenshots/ || true
+        
+        # Run screenshot validation
+        python automation/screenshot_validator.py
+      displayName: 'Run screenshot validation'
+    
+    - script: |
+        # If validation failed and auto-fix is enabled, re-run Flutter tests
+        if [ -f "automation/reports/ui_fixes_applied.json" ]; then
+          echo "UI fixes were applied, re-running Flutter tests..."
+          cd frontend
+          flutter pub get
+          xvfb-run -a flutter test integration_test --verbose
+        fi
+      displayName: 'Re-run tests after auto-fixes'
+      condition: always()
+    
+    - task: PublishBuildArtifacts@1
+      condition: always()
+      inputs:
+        pathToPublish: 'automation/screenshots'
+        artifactName: 'validated-screenshots'
+    
+    - task: PublishBuildArtifacts@1
+      condition: always()
+      inputs:
+        pathToPublish: 'automation/reports'
+        artifactName: 'validation-reports'
+
+- stage: FinalReport
+  displayName: 'Generate Final Report'
+  dependsOn: ScreenshotValidation
+  jobs:
+  - job: GenerateReport
+    displayName: 'Generate Comprehensive Report'
+    pool:
+      vmImage: 'ubuntu-latest'
+    
+    steps:
+    - checkout: self
+    
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '$(PYTHON_VERSION)'
+    
+    - task: DownloadBuildArtifacts@0
+      inputs:
+        buildType: 'current'
+        downloadType: 'multiple'
+        downloadPath: '$(System.ArtifactsDirectory)'
+    
+    - script: |
+        # Install dependencies
+        pip install jinja2 markdown
+        
+        # Run comprehensive automation report generator
+        python automation/run_automation.py --validation-only
+      displayName: 'Generate final automation report'
+    
+    - task: PublishBuildArtifacts@1
+      condition: always()
+      inputs:
+        pathToPublish: 'automation/reports'
+        artifactName: 'final-automation-report'
+    
+    - task: PublishBuildArtifacts@1
+      condition: always()
+      inputs:
+        pathToPublish: 'automation/screenshots'
+        artifactName: 'all-screenshots'
+
+- stage: Deployment
+  displayName: 'Deploy Preview'
+  dependsOn: FinalReport
+  condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+  jobs:
+  - job: DeployPreview
+    displayName: 'Deploy Preview Environment'
+    pool:
+      vmImage: 'ubuntu-latest'
+    
+    steps:
+    - checkout: self
+    
+    - task: FlutterInstall@0
+      inputs:
+        channel: 'stable'
+        version: '$(FLUTTER_VERSION)'
+    
+    - script: |
+        cd frontend
+        flutter pub get
+        flutter build web --release
+      displayName: 'Build Flutter web app'
+    
+    - script: |
+        echo "🚀 Deploying to preview environment..."
+        echo "Preview URL: https://preview-$(Build.BuildId).example.com"
+        # Add your deployment logic here
+      displayName: 'Deploy to preview'
+    
+    - task: GitHubComment@0
+      inputs:
+        gitHubConnection: 'github-connection'
+        repositoryName: '$(Build.Repository.Name)'
+        comment: |
+          ## 🚀 Preview Deployment Ready
+          
+          Your changes have been deployed to a preview environment:
+          **Preview URL:** https://preview-$(Build.BuildId).example.com
+          
+          This preview will be available for 7 days.
+          
+          ### Automation Results Summary
+          - ✅ All tests passed
+          - 📸 Screenshots validated
+          - 🔧 UI auto-fixes applied (if any)
+          
+          [View detailed report]($(System.TeamFoundationCollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId))

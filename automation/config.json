@@ -1,0 +1,44 @@
+{
+  "services": {
+    "auth": {
+      "port": 8001,
+      "required": true
+    },
+    "core": {
+      "port": 8002,
+      "required": true
+    },
+    "ml": {
+      "port": 8003,
+      "required": true
+    },
+    "payment": {
+      "port": 8004,
+      "required": true
+    }
+  },
+  "flutter": {
+    "test_timeout": 300,
+    "screenshot_delay": 2,
+    "web_port": 3000
+  },
+  "backend": {
+    "test_timeout": 60,
+    "retry_count": 3
+  },
+  "screenshot": {
+    "similarity_threshold": 0.95,
+    "auto_fix_enabled": true,
+    "baseline_update_mode": "manual"
+  },
+  "reporting": {
+    "generate_html": true,
+    "include_screenshots": true,
+    "retention_days": 30
+  },
+  "local_setup": {
+    "setup_date": "2025-08-30",
+    "system": "windows",
+    "project_root": "C:\\Users\\Admin\\Desktop\\Auto-Apply Job"
+  }
+}

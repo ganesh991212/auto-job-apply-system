@@ -1,0 +1,115 @@
+# Flutter/Dart
+frontend/.dart_tool/
+frontend/.packages
+frontend/.pub-cache/
+frontend/.pub/
+frontend/build/
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+frontend/.metadata
+frontend/pubspec.lock
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+automation/venv/
+backend/*/venv/
+env/
+ENV/
+.venv/
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+automation/setup_log.txt
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment variables
+.env
+.env.local
+.env.production
+.env.test
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Screenshots (keep structure but ignore large files)
+automation/screenshots/*.png
+automation/baselines/*.png
+automation/reports/*.html
+automation/reports/*.json
+
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Coverage reports
+coverage/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Security
+*.pem
+*.key
+*.crt
+secrets/
+
+# Build artifacts
+*.war
+*.jar
+*.tar.gz
+*.zip
+
+# Local configuration
+config.local.json
+settings.local.json

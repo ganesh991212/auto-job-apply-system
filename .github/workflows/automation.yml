@@ -1,0 +1,301 @@
+name: Auto Job Apply - Comprehensive Automation
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run automation daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Type of tests to run'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+        - full
+        - flutter-only
+        - backend-only
+        - validation-only
+
+env:
+  FLUTTER_VERSION: '3.16.0'
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '18'
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set test matrix
+        id: set-matrix
+        run: |
+          if [ "${{ github.event.inputs.test_type }}" = "flutter-only" ]; then
+            echo "matrix={\"include\":[{\"test\":\"flutter\"}]}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event.inputs.test_type }}" = "backend-only" ]; then
+            echo "matrix={\"include\":[{\"test\":\"backend\"}]}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event.inputs.test_type }}" = "validation-only" ]; then
+            echo "matrix={\"include\":[{\"test\":\"validation\"}]}" >> $GITHUB_OUTPUT
+          else
+            echo "matrix={\"include\":[{\"test\":\"full\"}]}" >> $GITHUB_OUTPUT
+          fi
+
+  automation-tests:
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{fromJson(needs.setup.outputs.matrix)}}
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: 9912129398
+          POSTGRES_USER: postgres
+          POSTGRES_DB: AutoJobApply
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libpq-dev \
+            python3-dev \
+            build-essential \
+            libopencv-dev \
+            python3-opencv \
+            xvfb \
+            chromium-browser \
+            chromium-chromedriver
+
+      - name: Cache Python dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Cache Flutter dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.pub-cache
+            frontend/.dart_tool
+          key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-flutter-
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r automation/requirements.txt
+          pip install pytest pytest-html pytest-json-report
+
+      - name: Install Flutter dependencies
+        run: |
+          cd frontend
+          flutter pub get
+          flutter config --enable-web
+
+      - name: Setup database tables
+        run: |
+          python create_database_tables.py
+        env:
+          DATABASE_URL: postgresql://postgres:9912129398@localhost:5432/AutoJobApply
+
+      - name: Start backend services
+        run: |
+          # Start all backend services in background
+          cd backend/auth && python -m venv venv && source venv/bin/activate && pip install -r requirements.txt && python test_server.py &
+          cd backend/core && python -m venv venv && source venv/bin/activate && pip install -r requirements.txt && python test_server.py &
+          cd backend/ml && python -m venv venv && source venv/bin/activate && pip install -r requirements.txt && python test_server.py &
+          cd backend/payment && python -m venv venv && source venv/bin/activate && pip install -r requirements.txt && python test_server.py &
+          
+          # Wait for services to start
+          sleep 30
+          
+          # Verify services are running
+          curl -f http://localhost:8001/health || exit 1
+          curl -f http://localhost:8002/health || exit 1
+          curl -f http://localhost:8003/health || exit 1
+          curl -f http://localhost:8004/health || exit 1
+
+      - name: Run Flutter integration tests
+        if: matrix.test == 'flutter' || matrix.test == 'full'
+        run: |
+          cd frontend
+          # Use xvfb for headless testing
+          xvfb-run -a flutter test integration_test --verbose
+        env:
+          DISPLAY: :99
+
+      - name: Run backend automation tests
+        if: matrix.test == 'backend' || matrix.test == 'full'
+        run: |
+          python -m pytest automation/tests/backend_automation_test.py -v \
+            --html=automation/reports/backend_report.html \
+            --json-report --json-report-file=automation/reports/backend_results.json
+
+      - name: Run screenshot validation
+        if: matrix.test == 'validation' || matrix.test == 'full'
+        run: |
+          python automation/screenshot_validator.py
+
+      - name: Run full automation suite
+        if: matrix.test == 'full'
+        run: |
+          python automation/run_automation.py
+
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: test-results-${{ matrix.test }}
+          path: |
+            automation/reports/
+            automation/screenshots/
+            frontend/test/
+          retention-days: 30
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: coverage-reports
+          path: |
+            coverage.xml
+            lcov.info
+          retention-days: 7
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const path = 'automation/reports/automation_results_latest.json';
+            
+            if (fs.existsSync(path)) {
+              const results = JSON.parse(fs.readFileSync(path, 'utf8'));
+              const status = results.overall_status === 'passed' ? '✅ PASSED' : '❌ FAILED';
+              
+              const comment = `
+              ## 🤖 Automation Test Results ${status}
+              
+              **Overall Status:** ${results.overall_status.toUpperCase()}
+              
+              ### 📱 Flutter Tests
+              - Status: ${results.flutter_tests?.status || 'N/A'}
+              - Screenshots: ${results.flutter_tests?.screenshots_captured || 0}
+              
+              ### 🐍 Backend Tests  
+              - Status: ${results.backend_tests?.status || 'N/A'}
+              - API Responses: ${results.backend_tests?.api_responses_captured || 0}
+              
+              ### 📸 Screenshot Validation
+              - Status: ${results.screenshot_validation?.status || 'N/A'}
+              - Total Screenshots: ${results.screenshot_validation?.total_screenshots || 0}
+              - Passed: ${results.screenshot_validation?.passed || 0}
+              - Failed: ${results.screenshot_validation?.failed || 0}
+              - Auto-Fixed: ${results.screenshot_validation?.auto_fixed || 0}
+              
+              [View detailed report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+              `;
+              
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            }
+
+  deploy-preview:
+    needs: automation-tests
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && success()
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+
+      - name: Build Flutter web
+        run: |
+          cd frontend
+          flutter pub get
+          flutter build web --release
+
+      - name: Deploy to preview environment
+        run: |
+          echo "🚀 Deploying to preview environment..."
+          # Add your deployment logic here
+          # This could be Netlify, Vercel, Firebase Hosting, etc.
+
+  notify-results:
+    needs: [automation-tests]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Notify Slack on failure
+        if: failure()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          channel: '#automation'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+          message: |
+            🚨 Automation tests failed!
+            Repository: ${{ github.repository }}
+            Branch: ${{ github.ref }}
+            Commit: ${{ github.sha }}
+            
+      - name: Notify Slack on success
+        if: success()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          channel: '#automation'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+          message: |
+            ✅ All automation tests passed!
+            Repository: ${{ github.repository }}
+            Branch: ${{ github.ref }}

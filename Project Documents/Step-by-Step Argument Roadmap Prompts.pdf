@@ -1,0 +1,92 @@
+Step 1 – Project Setup
+You are the AI lead developer.  
+Create the full project folder structure for "Auto Job Apply System" with multi-service architecture.  
+
+Structure:  
+- /frontend → Flutter Web (UI)  
+- /backend/auth → FastAPI service for authentication  
+- /backend/core → FastAPI service for job apply logic  
+- /backend/ml → ML microservice (resume parsing & rating)  
+- /backend/payment → Payment integration  
+- /db → PostgreSQL schema + migrations  
+- /infra → Docker Compose + CI/CD setup  
+
+Use Docker Compose for local dev (frontend, backend, db).  
+Follow SRS & PRD docs for requirements.  
+
+Step 2 – Authentication Service
+Generate FastAPI auth microservice.  
+Features:  
+- Google, Microsoft, Apple OAuth2 login (scopes: profile, email, User.Read)  
+- Email + OTP login  
+- JWT session management  
+- Secure DB storage for tokens (AES-256 encrypted)  
+- Role-based access (Candidate, Super Admin).  
+
+Then generate Flutter Web Login Page UI with these options.  
+After login → redirect to Profile Setup page.  
+
+Step 3 – Candidate Profile Setup
+Generate Flutter Web UI for Profile Setup.  
+Fields: First Name, Last Name, Email, Phone, Current LPA, Expected LPA, Skills, Resume Upload.  
+Dropdown for job platforms (LinkedIn, Naukri) with add/remove logic.  
+- If LinkedIn is already added, hide it from dropdown.  
+Store credentials securely in PostgreSQL (AES-256 encryption).  
+Backend API: /profile/save.  
+
+Step 4 – Auto Job Apply Service
+Generate FastAPI service to auto-apply jobs.  
+- Integrate mock APIs for LinkedIn & Naukri.  
+- Use stored encrypted credentials to authenticate.  
+- Apply jobs based on user job titles.  
+- Log applied jobs in DB: Company, Job Title, Description, Date.  
+Limit: 5/day per Candidate, Unlimited for Super Admin.  
+
+Step 5 – Resume Parsing & ML
+Generate ML microservice with FastAPI.  
+Endpoints:  
+- /resume/match → Input: resume text + job description → Output: score + missing keywords  
+- /resume/enhance → Suggest missing skills/keywords using LLM  
+
+Implementation:  
+- Use spaCy / BERT for skill extraction  
+- Cosine similarity for job match scoring  
+- HuggingFace transformers for LLM resume enhancement.  
+
+Step 6 – Candidate Dashboard & Job History
+Generate Flutter Web UI for Candidate Dashboard.  
+- Show Top 5 job matches with rating.  
+- Show "Apply Now" button.  
+- Job History Page: List applied jobs (Company, Title, Description, Date).  
+- Filters: Date, Company.  
+Backend APIs: /jobs/matches, /jobs/history.  
+
+Step 7 – Payment Integration
+Generate Payment microservice + Flutter UI.  
+- Monthly subscription plans.  
+- Support Stripe, Razorpay, PayPal.  
+- Store billing history in DB.  
+- UI → Plan selection page + billing history page.  
+- Backend endpoint: /payment/subscribe, /payment/webhook.  
+
+Step 8 – Super Admin Dashboard
+Generate Flutter Web UI for Super Admin Dashboard.  
+Features:  
+- Manage users (activate/deactivate, assign roles).  
+- Add/Remove job platforms.  
+- Unlimited job apply.  
+- Global Job Logs (all users).  
+Backend APIs: /admin/users, /admin/platforms, /admin/logs.  
+
+Step 9 – Security & Audit Logging
+Add security layer:  
+- AES-256 for credentials (LinkedIn/Naukri).  
+- Bcrypt hashing for passwords.  
+- Audit logging for all login attempts.  
+- Role-based access control for API endpoints.  
+
+Step 10 – Deployment & CI/CD
+Create Docker Compose with services: frontend, backend-auth, backend-core, backend-ml, backend-payment, postgres.  
+Generate CI/CD pipeline (GitHub Actions or Azure DevOps).  
+Deploy to Azure Web App / AWS ECS.  
+Ensure DB migrations run automatically.  

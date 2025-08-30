@@ -1,0 +1,23 @@
+It will include simple low-fidelity wireframes (sketch-style boxes and layouts) for:
+
+Candidate UI
+
+Login Page (Google/Microsoft/Apple/Email OTP)
+
+Profile Setup Page (Personal details, Resume Upload, LPA fields, Job Platforms dropdown)
+
+Dashboard (Top job matches + ratings, Apply history summary)
+
+Job History Page (List of applied jobs, filters)
+
+Payment Page (Subscription plan selection & billing)
+
+Super Admin UI
+
+Admin Dashboard (User overview, total jobs applied)
+
+Platform Management Page (Add/remove job portals dropdown)
+
+User Management Page (List of users, roles, permissions)
+
+System-wide Job Logs (Global applied jobs view)
