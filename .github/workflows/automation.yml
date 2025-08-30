@@ -1,10 +1,13 @@
-name: Auto Job Apply - Comprehensive Automation
+name: Auto Job Apply - DevOps Automation Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches:
+      - main          # Production-ready stable code
+      - test-build    # Triggers automation tests
+      - testing       # QA manual testing branch
   pull_request:
-    branches: [ main ]
+    branches: [ main, test-build ]
   schedule:
     # Run automation daily at 2 AM UTC
     - cron: '0 2 * * *'
@@ -19,22 +22,85 @@ on:
         - full
         - flutter-only
         - backend-only
+        - oauth-only
         - validation-only
+      branch:
+        description: 'Target branch for testing'
+        required: true
+        default: 'test-build'
+        type: choice
+        options:
+        - main
+        - test-build
+        - testing
 
 env:
   FLUTTER_VERSION: '3.16.0'
   PYTHON_VERSION: '3.11'
   NODE_VERSION: '18'
+  # OAuth Configuration (stored in GitHub Secrets)
+  GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+  GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+  MICROSOFT_CLIENT_ID: ${{ secrets.MICROSOFT_CLIENT_ID }}
+  MICROSOFT_CLIENT_SECRET: ${{ secrets.MICROSOFT_CLIENT_SECRET }}
+  APPLE_CLIENT_ID: ${{ secrets.APPLE_CLIENT_ID }}
+  APPLE_CLIENT_SECRET: ${{ secrets.APPLE_CLIENT_SECRET }}
+  # Test User Credentials
+  TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+  TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+  SUPER_USER_EMAIL: ${{ secrets.SUPER_USER_EMAIL }}
+  SUPER_USER_PASSWORD: ${{ secrets.SUPER_USER_PASSWORD }}
 
 jobs:
+  # Automatic test-build branch automation
+  test-build-automation:
+    if: github.ref == 'refs/heads/test-build'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup test environment
+        uses: ./.github/actions/setup-test-env
+
+      - name: Create random test users
+        run: |
+          python automation/comprehensive_test_runner.py --create-users-only
+        env:
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          MICROSOFT_CLIENT_ID: ${{ secrets.MICROSOFT_CLIENT_ID }}
+          MICROSOFT_CLIENT_SECRET: ${{ secrets.MICROSOFT_CLIENT_SECRET }}
+
+      - name: Run comprehensive automation
+        run: |
+          python automation/comprehensive_test_runner.py
+        env:
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          MICROSOFT_CLIENT_ID: ${{ secrets.MICROSOFT_CLIENT_ID }}
+          MICROSOFT_CLIENT_SECRET: ${{ secrets.MICROSOFT_CLIENT_SECRET }}
+
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: test-build-automation-results
+          path: |
+            automation/screenshots/
+            automation/reports/
+            automation/test_credentials.json
+          retention-days: 30
+
   setup:
+    if: github.ref != 'refs/heads/test-build'
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Set test matrix
         id: set-matrix
         run: |
@@ -42,6 +108,8 @@ jobs:
             echo "matrix={\"include\":[{\"test\":\"flutter\"}]}" >> $GITHUB_OUTPUT
           elif [ "${{ github.event.inputs.test_type }}" = "backend-only" ]; then
             echo "matrix={\"include\":[{\"test\":\"backend\"}]}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event.inputs.test_type }}" = "oauth-only" ]; then
+            echo "matrix={\"include\":[{\"test\":\"oauth\"}]}" >> $GITHUB_OUTPUT
           elif [ "${{ github.event.inputs.test_type }}" = "validation-only" ]; then
             echo "matrix={\"include\":[{\"test\":\"validation\"}]}" >> $GITHUB_OUTPUT
           else

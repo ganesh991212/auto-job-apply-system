@@ -1,0 +1,154 @@
+{
+  "branch_configurations": {
+    "main": {
+      "description": "Production-ready stable code",
+      "automation_trigger": "manual_only",
+      "test_suite": "smoke_tests",
+      "screenshot_validation": true,
+      "auto_fix_enabled": false,
+      "deployment_target": "production",
+      "required_approvals": 2,
+      "protection_rules": {
+        "require_status_checks": true,
+        "require_up_to_date_branch": true,
+        "require_conversation_resolution": true
+      }
+    },
+    "test-build": {
+      "description": "Automatic automation testing on every push",
+      "automation_trigger": "on_push",
+      "test_suite": "comprehensive",
+      "screenshot_validation": true,
+      "auto_fix_enabled": true,
+      "deployment_target": "staging",
+      "test_user_creation": "automatic",
+      "oauth_testing": "full",
+      "performance_testing": true,
+      "visual_regression": true,
+      "test_flows": [
+        "authentication_flow",
+        "dashboard_navigation",
+        "job_application_crud",
+        "resume_management",
+        "settings_configuration",
+        "logout_flow"
+      ],
+      "screenshot_requirements": {
+        "login_screen": ["initial", "filled_form", "oauth_redirect", "success", "error"],
+        "dashboard": ["main_view", "drawer_open", "widgets_test", "responsive"],
+        "job_application": ["form_view", "filled_form", "crud_operations", "validation"],
+        "resume_management": ["upload_view", "editing", "ai_optimization"],
+        "settings": ["main_view", "theme_switch", "preferences"],
+        "logout": ["completed", "session_cleanup"]
+      }
+    },
+    "testing": {
+      "description": "QA team manual testing branch",
+      "automation_trigger": "manual_command",
+      "test_suite": "qa_assisted",
+      "screenshot_validation": true,
+      "auto_fix_enabled": false,
+      "deployment_target": "qa_environment",
+      "test_user_creation": "manual",
+      "oauth_testing": "manual",
+      "qa_tools": {
+        "manual_test_runner": "automation/qa_manual_testing.py",
+        "test_report_generator": true,
+        "screenshot_comparison": true,
+        "performance_monitoring": true
+      },
+      "manual_testing_checklist": {
+        "authentication": [
+          "Google OAuth login",
+          "Microsoft OAuth login", 
+          "Apple OAuth login",
+          "Email/password login",
+          "Invalid credentials handling",
+          "Network timeout scenarios"
+        ],
+        "user_flows": [
+          "Complete registration flow",
+          "Dashboard navigation",
+          "Job search and application",
+          "Resume upload and editing",
+          "Settings configuration",
+          "Logout and session management"
+        ],
+        "edge_cases": [
+          "Network disconnection",
+          "Large file uploads",
+          "Concurrent user sessions",
+          "Browser compatibility",
+          "Mobile responsiveness"
+        ]
+      }
+    }
+  },
+  "global_settings": {
+    "screenshot_similarity_threshold": 0.95,
+    "test_timeout_seconds": 300,
+    "max_retry_attempts": 3,
+    "performance_thresholds": {
+      "page_load_time_ms": 3000,
+      "api_response_time_ms": 2000,
+      "screenshot_capture_time_ms": 1000
+    },
+    "notification_settings": {
+      "slack_webhook": "${{ secrets.SLACK_WEBHOOK }}",
+      "email_notifications": true,
+      "github_pr_comments": true
+    },
+    "artifact_retention": {
+      "screenshots": 30,
+      "reports": 90,
+      "test_credentials": 7
+    }
+  },
+  "oauth_providers": {
+    "google": {
+      "client_id_secret": "GOOGLE_CLIENT_ID",
+      "client_secret_secret": "GOOGLE_CLIENT_SECRET",
+      "test_account": "autotest.google@gmail.com",
+      "redirect_uri": "http://localhost:3000/auth/google/callback",
+      "scopes": ["openid", "email", "profile"]
+    },
+    "microsoft": {
+      "client_id_secret": "MICROSOFT_CLIENT_ID", 
+      "client_secret_secret": "MICROSOFT_CLIENT_SECRET",
+      "test_account": "autotest.microsoft@outlook.com",
+      "redirect_uri": "http://localhost:3000/auth/microsoft/callback",
+      "scopes": ["openid", "email", "profile"]
+    },
+    "apple": {
+      "client_id_secret": "APPLE_CLIENT_ID",
+      "client_secret_secret": "APPLE_CLIENT_SECRET", 
+      "test_account": "autotest.apple@icloud.com",
+      "redirect_uri": "http://localhost:3000/auth/apple/callback",
+      "scopes": ["openid", "email", "name"]
+    }
+  },
+  "test_data": {
+    "sample_jobs": [
+      {
+        "title": "Senior Flutter Developer",
+        "company": "Tech Corp Inc",
+        "location": "Remote",
+        "salary": "$120,000 - $150,000",
+        "description": "We are looking for an experienced Flutter developer..."
+      },
+      {
+        "title": "Python Backend Engineer", 
+        "company": "StartupXYZ",
+        "location": "San Francisco, CA",
+        "salary": "$130,000 - $160,000",
+        "description": "Join our team to build scalable backend systems..."
+      }
+    ],
+    "sample_resumes": [
+      {
+        "name": "test_resume_software_engineer.pdf",
+        "content": "John Doe\\nSoftware Engineer\\n5 years experience..."
+      }
+    ]
+  }
+}
