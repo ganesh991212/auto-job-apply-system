@@ -1,0 +1,238 @@
+{
+  "checklist_info": {
+    "title": "Auto Job Apply System - Manual Testing Checklist",
+    "version": "1.0",
+    "generated": "2025-08-30T10:40:54.185559",
+    "tester_name": "QA Team Member",
+    "test_environment": "http://localhost:3000"
+  },
+  "test_categories": {
+    "authentication_flows": {
+      "title": "\ud83d\udd10 Authentication & OAuth Testing",
+      "priority": "critical",
+      "estimated_time": "30 minutes",
+      "test_cases": [
+        {
+          "id": "AUTH-001",
+          "title": "Google OAuth Login Flow",
+          "steps": [
+            "1. Open http://localhost:3000",
+            "2. Click 'Sign in with Google' button",
+            "3. Verify button is clickable and not overlapping",
+            "4. Observe redirect to Google OAuth page",
+            "5. Enter valid Google credentials",
+            "6. Grant permissions when prompted",
+            "7. Verify successful redirect back to app",
+            "8. Confirm user is logged in (dashboard visible)"
+          ],
+          "expected_result": "Successful login and redirect to dashboard",
+          "edge_cases": [
+            "Test with popup blocker enabled",
+            "Test user cancellation during OAuth",
+            "Test with invalid Google account",
+            "Test with expired Google session"
+          ]
+        },
+        {
+          "id": "AUTH-002",
+          "title": "Microsoft OAuth Login Flow",
+          "steps": [
+            "1. Open http://localhost:3000",
+            "2. Click 'Sign in with Microsoft' button",
+            "3. Verify button styling and positioning",
+            "4. Observe redirect to Microsoft OAuth page",
+            "5. Enter valid Microsoft credentials",
+            "6. Handle 2FA if prompted",
+            "7. Verify successful redirect back to app",
+            "8. Confirm user is logged in"
+          ],
+          "expected_result": "Successful login and redirect to dashboard",
+          "edge_cases": [
+            "Test with corporate Microsoft account",
+            "Test with personal Microsoft account",
+            "Test with 2FA enabled",
+            "Test account lockout scenarios"
+          ]
+        },
+        {
+          "id": "AUTH-003",
+          "title": "Apple OAuth Login Flow",
+          "steps": [
+            "1. Open http://localhost:3000",
+            "2. Click 'Sign in with Apple' button",
+            "3. Verify button exists and is functional",
+            "4. Observe redirect to Apple OAuth page",
+            "5. Enter valid Apple ID credentials",
+            "6. Choose email sharing preference",
+            "7. Verify successful redirect back to app",
+            "8. Confirm user is logged in"
+          ],
+          "expected_result": "Successful login with email preference handling",
+          "edge_cases": [
+            "Test 'Hide My Email' option",
+            "Test without Apple ID",
+            "Test on non-Apple devices",
+            "Test with Apple ID 2FA"
+          ]
+        },
+        {
+          "id": "AUTH-004",
+          "title": "Email/Password Login",
+          "steps": [
+            "1. Open http://localhost:3000",
+            "2. Enter valid email in email field",
+            "3. Verify email field is properly positioned",
+            "4. Enter valid password in password field",
+            "5. Verify password field is not overlapping email field",
+            "6. Click 'Sign In' button",
+            "7. Verify successful login"
+          ],
+          "expected_result": "Successful email/password login",
+          "ui_validations": [
+            "Email field fully visible and not cut off",
+            "Password field properly positioned below email",
+            "No overlapping between fields",
+            "Tab navigation works correctly",
+            "Error messages display properly"
+          ]
+        }
+      ]
+    },
+    "ui_layout_validation": {
+      "title": "\ud83c\udfa8 UI Layout & Field Rendering",
+      "priority": "high",
+      "estimated_time": "45 minutes",
+      "test_cases": [
+        {
+          "id": "UI-001",
+          "title": "Login Form Field Alignment",
+          "steps": [
+            "1. Open login page in Chrome",
+            "2. Inspect email field positioning using DevTools",
+            "3. Verify field is within container bounds",
+            "4. Check password field positioning",
+            "5. Verify no overlapping elements",
+            "6. Test on different zoom levels (50%, 100%, 150%)",
+            "7. Repeat in Firefox and Edge browsers"
+          ],
+          "expected_result": "All fields properly aligned and visible",
+          "failure_indicators": [
+            "Email field cut off or outside container",
+            "Password field overlapping email field",
+            "Fields not responsive to zoom changes",
+            "Browser-specific rendering issues"
+          ]
+        },
+        {
+          "id": "UI-002",
+          "title": "Responsive Design Validation",
+          "steps": [
+            "1. Open app in desktop browser (1920x1080)",
+            "2. Verify all elements are properly positioned",
+            "3. Resize to tablet view (768x1024)",
+            "4. Check layout adapts correctly",
+            "5. Resize to mobile view (375x667)",
+            "6. Verify mobile layout is functional",
+            "7. Test landscape orientation on mobile"
+          ],
+          "expected_result": "Layout adapts properly at all breakpoints",
+          "critical_checks": [
+            "No horizontal scrolling on mobile",
+            "Touch targets are adequate size (44px minimum)",
+            "Text remains readable at all sizes",
+            "Navigation remains accessible"
+          ]
+        },
+        {
+          "id": "UI-003",
+          "title": "Cross-Browser Compatibility",
+          "steps": [
+            "1. Test in Chrome (latest version)",
+            "2. Test in Firefox (latest version)",
+            "3. Test in Edge (latest version)",
+            "4. Test in Safari (if available)",
+            "5. Compare OAuth button rendering",
+            "6. Compare form field positioning",
+            "7. Test JavaScript functionality"
+          ],
+          "expected_result": "Consistent behavior across all browsers",
+          "browser_specific_checks": [
+            "Chrome: OAuth popup handling",
+            "Firefox: File upload functionality",
+            "Edge: Microsoft OAuth integration",
+            "Safari: Apple OAuth integration"
+          ]
+        }
+      ]
+    },
+    "accessibility_testing": {
+      "title": "\u267f Accessibility & WCAG Compliance",
+      "priority": "high",
+      "estimated_time": "30 minutes",
+      "test_cases": [
+        {
+          "id": "A11Y-001",
+          "title": "Keyboard Navigation",
+          "steps": [
+            "1. Open login page",
+            "2. Use only Tab key to navigate",
+            "3. Verify logical tab order",
+            "4. Test Shift+Tab for reverse navigation",
+            "5. Verify focus indicators are visible",
+            "6. Test Enter key on buttons",
+            "7. Test Escape key functionality"
+          ],
+          "expected_result": "Complete keyboard accessibility",
+          "wcag_criteria": [
+            "2.1.1 Keyboard accessible",
+            "2.4.3 Focus order",
+            "2.4.7 Focus visible"
+          ]
+        },
+        {
+          "id": "A11Y-002",
+          "title": "Screen Reader Compatibility",
+          "steps": [
+            "1. Enable screen reader (NVDA/JAWS)",
+            "2. Navigate through login form",
+            "3. Verify field labels are announced",
+            "4. Test error message announcements",
+            "5. Verify button descriptions",
+            "6. Test form submission feedback"
+          ],
+          "expected_result": "All elements properly announced",
+          "wcag_criteria": [
+            "1.3.1 Info and relationships",
+            "3.3.2 Labels or instructions",
+            "4.1.2 Name, role, value"
+          ]
+        }
+      ]
+    },
+    "performance_testing": {
+      "title": "\u26a1 Performance & Load Testing",
+      "priority": "medium",
+      "estimated_time": "20 minutes",
+      "test_cases": [
+        {
+          "id": "PERF-001",
+          "title": "Page Load Performance",
+          "steps": [
+            "1. Open DevTools Network tab",
+            "2. Navigate to login page",
+            "3. Measure page load time",
+            "4. Check for render-blocking resources",
+            "5. Verify images are optimized",
+            "6. Test with slow 3G simulation"
+          ],
+          "expected_result": "Page loads under 3 seconds",
+          "performance_thresholds": {
+            "first_contentful_paint": "< 1.5s",
+            "largest_contentful_paint": "< 2.5s",
+            "cumulative_layout_shift": "< 0.1"
+          }
+        }
+      ]
+    }
+  }
+}

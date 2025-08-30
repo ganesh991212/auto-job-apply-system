@@ -1,0 +1,311 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Manual Testing Checklist - Auto Job Apply</title>
+            <style>
+                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #f5f7fa; }
+                .container { max-width: 1200px; margin: 0 auto; }
+                .header { background: linear-gradient(135deg, #6366F1, #EC4899); color: white; padding: 30px; border-radius: 12px; margin-bottom: 30px; }
+                .category { background: white; margin: 20px 0; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+                .test-case { background: #f8fafc; margin: 15px 0; padding: 20px; border-radius: 8px; border-left: 4px solid #6366F1; }
+                .checklist-item { margin: 8px 0; }
+                .checklist-item input[type="checkbox"] { margin-right: 10px; transform: scale(1.2); }
+                .priority-critical { border-left-color: #DC2626; }
+                .priority-high { border-left-color: #F59E0B; }
+                .priority-medium { border-left-color: #10B981; }
+                .progress-bar { background: #e5e7eb; height: 20px; border-radius: 10px; margin: 20px 0; }
+                .progress-fill { background: linear-gradient(90deg, #6366F1, #8B5CF6); height: 100%; border-radius: 10px; width: 0%; transition: width 0.3s; }
+                .edge-case { background: #fef3c7; padding: 10px; margin: 10px 0; border-radius: 6px; }
+                .ui-validation { background: #dbeafe; padding: 10px; margin: 10px 0; border-radius: 6px; }
+                .failure-indicator { background: #fee2e2; padding: 10px; margin: 10px 0; border-radius: 6px; }
+                .test-credentials { background: #ecfdf5; padding: 15px; border-radius: 8px; margin: 20px 0; }
+                .quick-links { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
+                .quick-link { background: #6366F1; color: white; padding: 15px; text-align: center; border-radius: 8px; text-decoration: none; }
+                .quick-link:hover { background: #4F46E5; }
+            </style>
+            <script>
+                function updateProgress() {
+                    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+                    const checked = document.querySelectorAll('input[type="checkbox"]:checked');
+                    const progress = (checked.length / checkboxes.length) * 100;
+                    document.getElementById('progress-fill').style.width = progress + '%';
+                    document.getElementById('progress-text').textContent = 
+                        `${checked.length} / ${checkboxes.length} tests completed (${Math.round(progress)}%)`;
+                }
+                
+                function saveProgress() {
+                    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+                    const progress = {};
+                    checkboxes.forEach(cb => {
+                        progress[cb.id] = cb.checked;
+                    });
+                    localStorage.setItem('testProgress', JSON.stringify(progress));
+                    alert('Progress saved!');
+                }
+                
+                function loadProgress() {
+                    const saved = localStorage.getItem('testProgress');
+                    if (saved) {
+                        const progress = JSON.parse(saved);
+                        Object.keys(progress).forEach(id => {
+                            const checkbox = document.getElementById(id);
+                            if (checkbox) checkbox.checked = progress[id];
+                        });
+                        updateProgress();
+                    }
+                }
+                
+                function exportResults() {
+                    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+                    const results = [];
+                    checkboxes.forEach(cb => {
+                        const testCase = cb.closest('.test-case');
+                        const category = cb.closest('.category');
+                        results.push({
+                            category: category.querySelector('h2').textContent,
+                            test_id: cb.id,
+                            test_name: testCase.querySelector('h4').textContent,
+                            status: cb.checked ? 'PASS' : 'PENDING',
+                            timestamp: new Date().toISOString()
+                        });
+                    });
+                    
+                    const blob = new Blob([JSON.stringify(results, null, 2)], {type: 'application/json'});
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'manual_test_results.json';
+                    a.click();
+                }
+            </script>
+        </head>
+        <body onload="loadProgress()">
+            <div class="container">
+                <div class="header">
+                    <h1>🧪 Manual Testing Checklist</h1>
+                    <h2>Auto Job Apply System</h2>
+                    <p>Generated: 2025-08-30T10:40:54.185559</p>
+                    <p>Environment: http://localhost:3000</p>
+                </div>
+                
+                <div class="progress-bar">
+                    <div id="progress-fill" class="progress-fill"></div>
+                </div>
+                <p id="progress-text" style="text-align: center; font-weight: bold;">0 / 0 tests completed (0%)</p>
+                
+                <div style="text-align: center; margin: 20px 0;">
+                    <button onclick="saveProgress()" style="background: #10B981; color: white; padding: 10px 20px; border: none; border-radius: 6px; margin: 5px;">💾 Save Progress</button>
+                    <button onclick="exportResults()" style="background: #6366F1; color: white; padding: 10px 20px; border: none; border-radius: 6px; margin: 5px;">📊 Export Results</button>
+                </div>
+                
+                <div class="test-credentials">
+                    <h3>🔐 Test Credentials</h3>
+                    <p><strong>Test User:</strong> autotest_1756529234_x7k9m2@gmail.com</p>
+                    <p><strong>Password:</strong> TestPass123!</p>
+                    <p><strong>Super User:</strong> admin@autojobapply.com</p>
+                    <p><strong>Super Password:</strong> SuperAdmin123!</p>
+                </div>
+                
+                <div class="quick-links">
+                    <a href="http://localhost:3000" target="_blank" class="quick-link">🌐 Open App</a>
+                    <a href="http://localhost:8001/docs" target="_blank" class="quick-link">📚 Auth API</a>
+                    <a href="http://localhost:8002/docs" target="_blank" class="quick-link">📚 Core API</a>
+                    <a href="automation/screenshots/" target="_blank" class="quick-link">📸 Screenshots</a>
+                </div>
+        
+                <div class="category priority-critical">
+                    <h2>🔐 Authentication & OAuth Testing</h2>
+                    <p><strong>Priority:</strong> Critical</p>
+                    <p><strong>Estimated Time:</strong> 30 minutes</p>
+            
+                    <div class="test-case">
+                        <h4>
+                            <input type="checkbox" id="AUTH-001" onchange="updateProgress()">
+                            Google OAuth Login Flow (AUTH-001)
+                        </h4>
+                        
+                        <div class="ui-validation">
+                            <strong>📋 Test Steps:</strong>
+                            <ol>
+                <li>1. Open http://localhost:3000</li><li>2. Click 'Sign in with Google' button</li><li>3. Verify button is clickable and not overlapping</li><li>4. Observe redirect to Google OAuth page</li><li>5. Enter valid Google credentials</li><li>6. Grant permissions when prompted</li><li>7. Verify successful redirect back to app</li><li>8. Confirm user is logged in (dashboard visible)</li>
+                            </ol>
+                            <p><strong>Expected Result:</strong> Successful login and redirect to dashboard</p>
+                        </div>
+                
+                        <div class="edge-case">
+                            <strong>⚠️ Edge Cases to Test:</strong>
+                            <ul>
+                    <li>Test with popup blocker enabled</li><li>Test user cancellation during OAuth</li><li>Test with invalid Google account</li><li>Test with expired Google session</li></ul></div></div>
+                    <div class="test-case">
+                        <h4>
+                            <input type="checkbox" id="AUTH-002" onchange="updateProgress()">
+                            Microsoft OAuth Login Flow (AUTH-002)
+                        </h4>
+                        
+                        <div class="ui-validation">
+                            <strong>📋 Test Steps:</strong>
+                            <ol>
+                <li>1. Open http://localhost:3000</li><li>2. Click 'Sign in with Microsoft' button</li><li>3. Verify button styling and positioning</li><li>4. Observe redirect to Microsoft OAuth page</li><li>5. Enter valid Microsoft credentials</li><li>6. Handle 2FA if prompted</li><li>7. Verify successful redirect back to app</li><li>8. Confirm user is logged in</li>
+                            </ol>
+                            <p><strong>Expected Result:</strong> Successful login and redirect to dashboard</p>
+                        </div>
+                
+                        <div class="edge-case">
+                            <strong>⚠️ Edge Cases to Test:</strong>
+                            <ul>
+                    <li>Test with corporate Microsoft account</li><li>Test with personal Microsoft account</li><li>Test with 2FA enabled</li><li>Test account lockout scenarios</li></ul></div></div>
+                    <div class="test-case">
+                        <h4>
+                            <input type="checkbox" id="AUTH-003" onchange="updateProgress()">
+                            Apple OAuth Login Flow (AUTH-003)
+                        </h4>
+                        
+                        <div class="ui-validation">
+                            <strong>📋 Test Steps:</strong>
+                            <ol>
+                <li>1. Open http://localhost:3000</li><li>2. Click 'Sign in with Apple' button</li><li>3. Verify button exists and is functional</li><li>4. Observe redirect to Apple OAuth page</li><li>5. Enter valid Apple ID credentials</li><li>6. Choose email sharing preference</li><li>7. Verify successful redirect back to app</li><li>8. Confirm user is logged in</li>
+                            </ol>
+                            <p><strong>Expected Result:</strong> Successful login with email preference handling</p>
+                        </div>
+                
+                        <div class="edge-case">
+                            <strong>⚠️ Edge Cases to Test:</strong>
+                            <ul>
+                    <li>Test 'Hide My Email' option</li><li>Test without Apple ID</li><li>Test on non-Apple devices</li><li>Test with Apple ID 2FA</li></ul></div></div>
+                    <div class="test-case">
+                        <h4>
+                            <input type="checkbox" id="AUTH-004" onchange="updateProgress()">
+                            Email/Password Login (AUTH-004)
+                        </h4>
+                        
+                        <div class="ui-validation">
+                            <strong>📋 Test Steps:</strong>
+                            <ol>
+                <li>1. Open http://localhost:3000</li><li>2. Enter valid email in email field</li><li>3. Verify email field is properly positioned</li><li>4. Enter valid password in password field</li><li>5. Verify password field is not overlapping email field</li><li>6. Click 'Sign In' button</li><li>7. Verify successful login</li>
+                            </ol>
+                            <p><strong>Expected Result:</strong> Successful email/password login</p>
+                        </div>
+                
+                        <div class="ui-validation">
+                            <strong>🎨 UI Validations:</strong>
+                            <ul>
+                    <li>Email field fully visible and not cut off</li><li>Password field properly positioned below email</li><li>No overlapping between fields</li><li>Tab navigation works correctly</li><li>Error messages display properly</li></ul></div></div></div>
+                <div class="category priority-high">
+                    <h2>🎨 UI Layout & Field Rendering</h2>
+                    <p><strong>Priority:</strong> High</p>
+                    <p><strong>Estimated Time:</strong> 45 minutes</p>
+            
+                    <div class="test-case">
+                        <h4>
+                            <input type="checkbox" id="UI-001" onchange="updateProgress()">
+                            Login Form Field Alignment (UI-001)
+                        </h4>
+                        
+                        <div class="ui-validation">
+                            <strong>📋 Test Steps:</strong>
+                            <ol>
+                <li>1. Open login page in Chrome</li><li>2. Inspect email field positioning using DevTools</li><li>3. Verify field is within container bounds</li><li>4. Check password field positioning</li><li>5. Verify no overlapping elements</li><li>6. Test on different zoom levels (50%, 100%, 150%)</li><li>7. Repeat in Firefox and Edge browsers</li>
+                            </ol>
+                            <p><strong>Expected Result:</strong> All fields properly aligned and visible</p>
+                        </div>
+                
+                        <div class="failure-indicator">
+                            <strong>🚨 Failure Indicators:</strong>
+                            <ul>
+                    <li>Email field cut off or outside container</li><li>Password field overlapping email field</li><li>Fields not responsive to zoom changes</li><li>Browser-specific rendering issues</li></ul></div></div>
+                    <div class="test-case">
+                        <h4>
+                            <input type="checkbox" id="UI-002" onchange="updateProgress()">
+                            Responsive Design Validation (UI-002)
+                        </h4>
+                        
+                        <div class="ui-validation">
+                            <strong>📋 Test Steps:</strong>
+                            <ol>
+                <li>1. Open app in desktop browser (1920x1080)</li><li>2. Verify all elements are properly positioned</li><li>3. Resize to tablet view (768x1024)</li><li>4. Check layout adapts correctly</li><li>5. Resize to mobile view (375x667)</li><li>6. Verify mobile layout is functional</li><li>7. Test landscape orientation on mobile</li>
+                            </ol>
+                            <p><strong>Expected Result:</strong> Layout adapts properly at all breakpoints</p>
+                        </div>
+                </div>
+                    <div class="test-case">
+                        <h4>
+                            <input type="checkbox" id="UI-003" onchange="updateProgress()">
+                            Cross-Browser Compatibility (UI-003)
+                        </h4>
+                        
+                        <div class="ui-validation">
+                            <strong>📋 Test Steps:</strong>
+                            <ol>
+                <li>1. Test in Chrome (latest version)</li><li>2. Test in Firefox (latest version)</li><li>3. Test in Edge (latest version)</li><li>4. Test in Safari (if available)</li><li>5. Compare OAuth button rendering</li><li>6. Compare form field positioning</li><li>7. Test JavaScript functionality</li>
+                            </ol>
+                            <p><strong>Expected Result:</strong> Consistent behavior across all browsers</p>
+                        </div>
+                </div></div>
+                <div class="category priority-high">
+                    <h2>♿ Accessibility & WCAG Compliance</h2>
+                    <p><strong>Priority:</strong> High</p>
+                    <p><strong>Estimated Time:</strong> 30 minutes</p>
+            
+                    <div class="test-case">
+                        <h4>
+                            <input type="checkbox" id="A11Y-001" onchange="updateProgress()">
+                            Keyboard Navigation (A11Y-001)
+                        </h4>
+                        
+                        <div class="ui-validation">
+                            <strong>📋 Test Steps:</strong>
+                            <ol>
+                <li>1. Open login page</li><li>2. Use only Tab key to navigate</li><li>3. Verify logical tab order</li><li>4. Test Shift+Tab for reverse navigation</li><li>5. Verify focus indicators are visible</li><li>6. Test Enter key on buttons</li><li>7. Test Escape key functionality</li>
+                            </ol>
+                            <p><strong>Expected Result:</strong> Complete keyboard accessibility</p>
+                        </div>
+                </div>
+                    <div class="test-case">
+                        <h4>
+                            <input type="checkbox" id="A11Y-002" onchange="updateProgress()">
+                            Screen Reader Compatibility (A11Y-002)
+                        </h4>
+                        
+                        <div class="ui-validation">
+                            <strong>📋 Test Steps:</strong>
+                            <ol>
+                <li>1. Enable screen reader (NVDA/JAWS)</li><li>2. Navigate through login form</li><li>3. Verify field labels are announced</li><li>4. Test error message announcements</li><li>5. Verify button descriptions</li><li>6. Test form submission feedback</li>
+                            </ol>
+                            <p><strong>Expected Result:</strong> All elements properly announced</p>
+                        </div>
+                </div></div>
+                <div class="category priority-medium">
+                    <h2>⚡ Performance & Load Testing</h2>
+                    <p><strong>Priority:</strong> Medium</p>
+                    <p><strong>Estimated Time:</strong> 20 minutes</p>
+            
+                    <div class="test-case">
+                        <h4>
+                            <input type="checkbox" id="PERF-001" onchange="updateProgress()">
+                            Page Load Performance (PERF-001)
+                        </h4>
+                        
+                        <div class="ui-validation">
+                            <strong>📋 Test Steps:</strong>
+                            <ol>
+                <li>1. Open DevTools Network tab</li><li>2. Navigate to login page</li><li>3. Measure page load time</li><li>4. Check for render-blocking resources</li><li>5. Verify images are optimized</li><li>6. Test with slow 3G simulation</li>
+                            </ol>
+                            <p><strong>Expected Result:</strong> Page loads under 3 seconds</p>
+                        </div>
+                </div></div>
+                <div class="category">
+                    <h2>📊 Testing Summary</h2>
+                    <p>Complete all test cases above and export results for review.</p>
+                    <p>Any failures should be documented with screenshots and detailed reproduction steps.</p>
+                    
+                    <div style="text-align: center; margin: 30px 0;">
+                        <button onclick="exportResults()" style="background: #059669; color: white; padding: 15px 30px; border: none; border-radius: 8px; font-size: 16px;">
+                            ✅ Export Final Test Results
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>
+        

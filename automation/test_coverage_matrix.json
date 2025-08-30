@@ -1,0 +1,304 @@
+{
+  "test_coverage_matrix": {
+    "functional_requirements": {
+      "authentication": {
+        "oauth_flows": {
+          "google_oauth": {
+            "test_cases": [
+              "button_exists_and_clickable",
+              "redirect_to_google_auth",
+              "successful_login_flow",
+              "user_cancellation_handling",
+              "invalid_credentials_error",
+              "network_timeout_handling",
+              "token_expiration_handling",
+              "multiple_login_attempts"
+            ],
+            "ui_validations": [
+              "button_styling_correct",
+              "button_not_overlapping",
+              "proper_loading_state",
+              "error_message_display",
+              "redirect_url_validation"
+            ],
+            "edge_cases": [
+              "popup_blocked_scenario",
+              "third_party_cookies_disabled",
+              "browser_back_button_during_oauth",
+              "multiple_tabs_oauth_conflict"
+            ]
+          },
+          "microsoft_oauth": {
+            "test_cases": [
+              "button_exists_and_clickable",
+              "redirect_to_microsoft_auth",
+              "successful_login_flow",
+              "user_cancellation_handling",
+              "invalid_credentials_error",
+              "network_timeout_handling",
+              "token_expiration_handling",
+              "multiple_login_attempts"
+            ],
+            "ui_validations": [
+              "button_styling_correct",
+              "button_not_overlapping",
+              "proper_loading_state",
+              "error_message_display",
+              "redirect_url_validation"
+            ],
+            "edge_cases": [
+              "popup_blocked_scenario",
+              "corporate_account_restrictions",
+              "two_factor_authentication",
+              "browser_compatibility_issues"
+            ]
+          },
+          "apple_oauth": {
+            "test_cases": [
+              "button_exists_and_clickable",
+              "redirect_to_apple_auth",
+              "successful_login_flow",
+              "user_cancellation_handling",
+              "invalid_credentials_error",
+              "network_timeout_handling",
+              "hide_email_option_handling"
+            ],
+            "ui_validations": [
+              "button_styling_correct",
+              "button_not_overlapping",
+              "proper_loading_state",
+              "error_message_display",
+              "apple_specific_ui_elements"
+            ],
+            "edge_cases": [
+              "apple_id_not_available",
+              "privacy_settings_conflict",
+              "device_trust_issues"
+            ]
+          }
+        },
+        "email_password_login": {
+          "test_cases": [
+            "valid_email_password_login",
+            "invalid_email_format",
+            "invalid_password",
+            "empty_fields_validation",
+            "sql_injection_prevention",
+            "password_strength_validation"
+          ],
+          "ui_validations": [
+            "email_field_not_overlapping",
+            "password_field_not_overlapping",
+            "fields_properly_aligned",
+            "tab_navigation_working",
+            "keyboard_accessibility",
+            "error_messages_visible",
+            "loading_state_proper"
+          ]
+        }
+      },
+      "user_flows": {
+        "candidate_registration": {
+          "test_cases": [
+            "complete_profile_setup",
+            "resume_upload_validation",
+            "skills_selection",
+            "platform_credentials_encryption",
+            "lpa_field_validation"
+          ],
+          "ui_validations": [
+            "form_fields_alignment",
+            "dropdown_functionality",
+            "file_upload_ui",
+            "progress_indicators",
+            "responsive_layout"
+          ]
+        },
+        "job_application_flow": {
+          "test_cases": [
+            "job_search_functionality",
+            "job_application_creation",
+            "application_status_tracking",
+            "bulk_application_operations",
+            "application_limit_enforcement"
+          ],
+          "ui_validations": [
+            "job_cards_layout",
+            "application_form_alignment",
+            "status_indicators_visible",
+            "pagination_controls",
+            "filter_ui_functionality"
+          ]
+        },
+        "admin_workflows": {
+          "test_cases": [
+            "user_management_crud",
+            "platform_management",
+            "system_logs_access",
+            "unlimited_applications",
+            "role_based_access"
+          ],
+          "ui_validations": [
+            "admin_dashboard_layout",
+            "data_table_responsiveness",
+            "action_buttons_alignment",
+            "modal_dialogs_proper",
+            "navigation_consistency"
+          ]
+        }
+      }
+    },
+    "ui_ux_requirements": {
+      "responsive_design": {
+        "breakpoints": {
+          "mobile": {"width": 375, "height": 667},
+          "tablet": {"width": 768, "height": 1024},
+          "desktop": {"width": 1920, "height": 1080},
+          "large_desktop": {"width": 2560, "height": 1440}
+        },
+        "test_scenarios": [
+          "layout_integrity_all_breakpoints",
+          "text_readability_all_sizes",
+          "button_touch_targets_adequate",
+          "navigation_accessible_mobile",
+          "content_scrolling_proper"
+        ]
+      },
+      "accessibility": {
+        "wcag_aa_compliance": [
+          "color_contrast_ratio_4_5_1",
+          "keyboard_navigation_complete",
+          "screen_reader_compatibility",
+          "focus_indicators_visible",
+          "alt_text_for_images"
+        ],
+        "test_scenarios": [
+          "tab_navigation_logical_order",
+          "screen_reader_announcements",
+          "high_contrast_mode_support",
+          "keyboard_only_navigation",
+          "focus_trap_in_modals"
+        ]
+      },
+      "visual_consistency": {
+        "design_system": [
+          "color_palette_consistency",
+          "typography_hierarchy",
+          "spacing_grid_system",
+          "component_styling",
+          "icon_consistency"
+        ],
+        "layout_validation": [
+          "field_alignment_perfect",
+          "no_overlapping_elements",
+          "proper_margins_padding",
+          "consistent_button_sizes",
+          "uniform_card_layouts"
+        ]
+      }
+    },
+    "performance_requirements": {
+      "page_load_times": {
+        "thresholds": {
+          "login_page": "< 2 seconds",
+          "dashboard": "< 3 seconds",
+          "job_application": "< 2.5 seconds",
+          "resume_upload": "< 4 seconds"
+        }
+      },
+      "api_response_times": {
+        "thresholds": {
+          "auth_endpoints": "< 1 second",
+          "job_search": "< 2 seconds",
+          "resume_processing": "< 5 seconds",
+          "payment_processing": "< 3 seconds"
+        }
+      }
+    },
+    "security_requirements": {
+      "authentication_security": [
+        "jwt_token_validation",
+        "oauth_state_parameter_validation",
+        "csrf_protection",
+        "session_timeout_handling",
+        "secure_cookie_settings"
+      ],
+      "data_protection": [
+        "credentials_encryption_aes256",
+        "password_hashing_bcrypt",
+        "sensitive_data_masking",
+        "audit_logging_enabled"
+      ]
+    }
+  },
+  "automation_test_scenarios": {
+    "critical_path_testing": {
+      "user_registration_to_first_application": [
+        "oauth_login_success",
+        "profile_setup_completion",
+        "resume_upload_success",
+        "job_search_execution",
+        "first_application_submission",
+        "application_status_verification"
+      ]
+    },
+    "error_scenario_testing": {
+      "network_failures": [
+        "oauth_redirect_timeout",
+        "api_request_timeout",
+        "file_upload_interruption",
+        "database_connection_loss"
+      ],
+      "user_input_validation": [
+        "invalid_email_formats",
+        "weak_password_rejection",
+        "file_size_limit_enforcement",
+        "special_character_handling"
+      ]
+    },
+    "browser_compatibility": {
+      "supported_browsers": ["chrome", "firefox", "edge", "safari"],
+      "test_scenarios": [
+        "oauth_popup_handling",
+        "file_upload_functionality",
+        "responsive_layout_rendering",
+        "javascript_execution"
+      ]
+    }
+  },
+  "screenshot_validation_requirements": {
+    "baseline_management": {
+      "creation_triggers": [
+        "first_test_run",
+        "intentional_ui_changes",
+        "new_feature_addition"
+      ],
+      "update_process": [
+        "manual_approval_required",
+        "visual_diff_review",
+        "stakeholder_sign_off"
+      ]
+    },
+    "comparison_criteria": {
+      "similarity_threshold": 0.95,
+      "pixel_tolerance": 5,
+      "ignore_regions": [
+        "timestamps",
+        "dynamic_content",
+        "loading_indicators"
+      ]
+    },
+    "failure_handling": {
+      "auto_fix_scenarios": [
+        "minor_spacing_issues",
+        "color_inconsistencies",
+        "font_size_variations"
+      ],
+      "manual_review_required": [
+        "major_layout_changes",
+        "new_ui_components",
+        "accessibility_violations"
+      ]
+    }
+  }
+}
